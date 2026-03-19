@@ -24,7 +24,7 @@
 ---
 
 ## 三、项目结构
-
+```plaintext
 STC51-MultiParam-Monitor/
 ├── hardware/ # 51 单片机代码 + 硬件原理图
 │ ├── main.c # STC51 采集主程序
@@ -34,6 +34,7 @@ STC51-MultiParam-Monitor/
 ├── sql/ # 数据库建表脚本
 ├── .gitignore # Git 忽略配置
 └── README.md # 项目说明
+```
 
 ---
 
@@ -41,7 +42,8 @@ STC51-MultiParam-Monitor/
 ### 1. 安装依赖
 ```bash
 cd server
-npm install```
+npm install
+```
 ### 2. 数据库初始化
 执行 sql/sensor_table.sql 创建数据表。
 ### 3. 修改数据库配置
@@ -54,10 +56,12 @@ const dbConfig = {
   user: '你的账号',
   password: '你的密码',
   database: 'sensor_data'
-};```
+};
+```
 ### 4. 启动服务
 ```bash
-node server.js```
+node server.js
+```
 
 ### 5. 访问前端
 浏览器访问：http://localhost:8081
