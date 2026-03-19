@@ -32,7 +32,6 @@ npm install
 3. 修改数据库配置
 修改 server/server.js 中的阿里云 RDS 配置：
 plaintext
-  明文
 const dbConfig = {
   host: '你的阿里云RDS地址',
   port: 3306,
