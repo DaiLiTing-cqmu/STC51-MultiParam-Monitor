@@ -1,16 +1,15 @@
-基于 STC51 的多参数采集与 Web 可视化系统
-项目简介
-面向便携式监测场景，搭建「硬件采集 — 无线传输 — 云端存储 —Web 可视化」全链路系统，实现多参数的实时采集、低延迟传输、阿里云 RDS 云端持久化与可视化展示。
-技术栈
-硬件：STC51 单片机（ADC多参数采集、串口/TCP传输）、PCB原理图设计
-服务端：Node.js（Express + WebSocket + Net）、阿里云 RDS MySQL
-服务端:Node.js（Express + WebSocket + Net）、阿里云 RDS MySQL
-前端：HTML + ECharts 实时波形可视化
-协议：自定义 FA/FB 双校验固定帧（10 字节）
-# 硬件模块说明
+# 基于 STC51 的多参数采集与 Web 可视化系统
+# 一、项目简介
+    面向便携式监测场景，搭建「硬件采集 — 无线传输 — 云端存储 —Web 可视化」全链路系统，实现多参数的实时采集、低延迟传输、阿里云 RDS 云端持久化与可视化展示。
+1.技术栈
+  1.1硬件：STC51 单片机（ADC多参数采集、串口/TCP传输）、PCB原理图设计
+  1.2服务端：Node.js（Express + WebSocket + Net）、阿里云 RDS MySQL
+  1.3前端：HTML + ECharts 实时波形可视化
+  1.4协议：自定义 FA/FB 双校验固定帧（10 字节）
+# 二、硬件模块说明
 - main.c：STC51单片机核心程序，实现ADC采集多参数（心音/温度/光强/电压），并通过串口/TCP发送数据
 - PCB_main.pdf：硬件原理图，包含STC51最小系统、ADC采集电路、通信电路等
-项目结构
+# 三、项目结构
 plaintext
   明文
 STC51-MultiParam-Monitor/
@@ -22,7 +21,7 @@ STC51-MultiParam-Monitor/
 ├── sql/ # 数据库建表脚本
 ├── .gitignore # Git 忽略配置
 └── README.md # 项目说明
-快速部署
+# 四、快速部署
 1. 安装依赖
 plaintext
   明文
@@ -47,7 +46,7 @@ plaintext
 node server.js
 5. 访问前端
 浏览器访问：http://localhost:8081
-功能亮点
+# 五、功能亮点
 多参数 ADC 实时采集（心音、温度、光强、电压）
 自定义帧协议，数据还原率 99%+
 WebSocket 低延迟实时波形可视化
