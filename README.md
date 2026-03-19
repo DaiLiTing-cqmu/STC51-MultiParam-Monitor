@@ -11,8 +11,7 @@
 - PCB_main.pdf：硬件原理图，包含STC51最小系统、ADC采集电路、通信电路等
 # 三、项目结构
 plaintext
-  明文
-STC51-MultiParam-Monitor/
+'''STC51-MultiParam-Monitor/
 ├── hardware/ # 51 单片机代码 + 硬件原理图
 │ ├── main.c # STC51 采集主程序
 │ └── PCB_main.pdf # 硬件原理图
@@ -20,29 +19,28 @@ STC51-MultiParam-Monitor/
 ├── web/ # 前端可视化页面
 ├── sql/ # 数据库建表脚本
 ├── .gitignore # Git 忽略配置
-└── README.md # 项目说明
+└── README.md # 项目说明'''
 # 四、快速部署
 1. 安装依赖
-plaintext
-  明文
+'''
 cd server
-npm install
+npm install'''
 2. 数据库初始化
 执行 sql/sensor_table.sql 创建数据表。
 3. 修改数据库配置
 修改 server/server.js 中的阿里云 RDS 配置：
 plaintext
-const dbConfig = {
+'''const dbConfig = {
   host: '你的阿里云RDS地址',
   port: 3306,
   user: '你的账号',
   password: '你的密码',
   database: 'sensor_data'
-};
+};'''
 4. 启动服务
 plaintext
-  明文
-node server.js
+'''
+node server.js'''
 5. 访问前端
 浏览器访问：http://localhost:8081
 # 五、功能亮点
