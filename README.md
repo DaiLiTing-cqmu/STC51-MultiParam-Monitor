@@ -42,25 +42,25 @@ npm install'''
 执行 sql/sensor_table.sql 创建数据表。
 ### 3. 修改数据库配置
 修改 server/server.js 中的阿里云 RDS 配置：
-plaintext
-'''const dbConfig = {
+```python
+const dbConfig = {
   host: '你的阿里云RDS地址',
   port: 3306,
   user: '你的账号',
   password: '你的密码',
   database: 'sensor_data'
-};'''
+};```
 ### 4. 启动服务
-plaintext
-'''
-node server.js'''
+```python
+node server.js```
+
 ### 5. 访问前端
 浏览器访问：http://localhost:8081
 
 ---
 
 ## 五、功能亮点
-多参数 ADC 实时采集（心音、温度、光强、电压）
-自定义帧协议，数据还原率 99%+
-WebSocket 低延迟实时波形可视化
-阿里云 RDS 云端存储 + 历史数据查询
+   -多参数 ADC 实时采集（心音、温度、光强、电压）
+   -自定义帧协议，数据还原率 99%+
+   -WebSocket 低延迟实时波形可视化
+   -阿里云 RDS 云端存储 + 历史数据查询
