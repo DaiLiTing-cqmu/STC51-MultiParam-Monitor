@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>生理参数实时波形监测 </title>
+  <!-- 本地引入ECharts -->
+  <script src="echarts.min.js"></script>
+  <style>
+    .data-panel {
+      width: 96%;
+      max-width: 1600px;
+      margin: 10px auto 20px;
+      padding: 12px 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #f1f5f9;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      font-size: 16px;
+    }
+    .data-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: bold;
+    }
+    .data-item .label {
+      width: 80px;
+    }
+    .data-item .value {
+      padding: 4px 12px;
+      min-width: 100px;
+      text-align: center;
+      border-radius: 4px;
+      color: #fff;
+    }
+
+    .val-heart { background-color: #0066cc; }
+    .val-temp { background-color: #e63946; }
+    .val-light { background-color: #faa31b; }
+    .val-volt { background-color: #27ae60; }
+
+ 
+    .chart-container {
+      width: 96%;
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column; /* 竖向排列 */
+      justify-content: center;
+      gap: 20px; /* 图表之间的上下间距 */
+    }
+    .chart-box {
+      width: 100%; /* 宽度自适应 */
+      height: 400px; 
+      border: 1px solid rgb(162, 162, 162);
+    }
+    .test-panel {
+      width: 96%;
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background-color: #f8f9fa;
+    }
+    .test-panel .form-group {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .test-panel label {
+      width: 80px;
+      font-weight: bold;
+    }
+    .test-panel input {
+      padding: 6px;
+      width: 150px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .test-panel button {
+      padding: 8px 16px;
+      margin: 0 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: white;
+      background-color: #0066cc;
+      transition: background-color 0.2s;
+    }
+    .test-panel button:hover {
+      background-color: #0052a3;
+    }
+    .test-panel button.stop {
+      background-color: #ff4444;
+    }
+    .test-panel button.stop:hover {
+      background-color: #cc0000;
+    }
+    .test-panel button.reset {
+      background-color: #666;
+    }
+    .test-panel button.reset:hover {
+      background-color: #444;
+    }
+  </style>
+</head>
+<body>
+  <!-- 原始实时数据显示面板 -->
+  <div class="data-panel">
+    <div class="data-item">
+      <span class="label">心音数值：</span>
+      <span class="value val-heart" id="showHeart">0</span>
+    </div>
+    <div class="data-item">
+      <span class="label">温度数值：</span>
+      <span class="value val-temp" id="showTemp">0</span>
+    </div>
+    <div class="data-item">
+      <span class="label">光强数值：</span>
+      <span class="value val-light" id="showLight">0</span>
+    </div>
+    <div class="data-item">
+      <span class="label">电压(V)：</span>
+      <span class="value val-volt" id="showVolt">0</span>
+    </div>
+  </div>
+
+  <div class="test-panel">
+    <h3>手动数据测试面板</h3>
+    <div class="form-group">
+      <label>测试值：</label>
+      <input type="number" id="dataInput" min="0" placeholder="原始数值输入">
+      <button onclick="sendManualData()">发送单次测试数据</button>
+    </div>
+    <div class="form-group">
+      <label>模拟模式：</label>
+      <button onclick="startAutoTest()">启动自动模拟</button>
+      <button class="stop" onclick="stopAutoTest()">停止自动模拟</button>
+      <button class="reset" onclick="resetChartData()">重置图表数据</button>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <div id="waveChart1" class="chart-box"></div>
+    <div id="waveChart2" class="chart-box"></div>
+    <div id="waveChart3" class="chart-box"></div>
+    <div id="waveChart4" class="chart-box"></div>
+  </div>
+
+  <script>
+    // 全局变量，初始值为0
+    let dataLen = 201;
+    let heartDataCache = new Array(dataLen).fill(0);
+    let tempDataCache = new Array(dataLen).fill(0);
+    let lightDataCache = new Array(dataLen).fill(0);
+    let voltDataCache = new Array(dataLen).fill(0);
+    let autoTestTimer = null; 
+    let chartHeart, chartTemp, chartLight, chartVolt;
+
+  
+    document.addEventListener('DOMContentLoaded', function() {
+      // 初始化4个独立图表实例
+      chartHeart = echarts.init(document.getElementById('waveChart1'));
+      chartTemp = echarts.init(document.getElementById('waveChart2'));
+      chartLight = echarts.init(document.getElementById('waveChart3'));
+      chartVolt = echarts.init(document.getElementById('waveChart4'));
+
+      // 配置图表模板 
+      const baseOption = {
+        title: { textStyle:{fontSize:16,fontWeight:'bold'} },
+        //x轴
+        xAxis: {
+          type: 'category', 
+          name: '时间(采样点)',
+          data: Array.from({ length: dataLen }, (_, i) => i),
+          min: 0, max: dataLen, 
+          interval:2,
+          boundaryGap: false,
+          axisLabel: { formatter: (v) => v%10===0?v:'' },
+          splitLine: { show: true, lineStyle: { color: '#e5e5e5' }, interval: 4 },
+          axisLine:{ lineStyle:{width:2} }
+        },
+        //y轴
+        yAxis: {
+          type: 'value',
+          name: '原始数值',
+          min: 0, max: 1100, interval: 100,
+          splitLine: { lineStyle: { color: '#e5e5e5' } },
+          axisLine:{ lineStyle:{width:2} }
+        },
+        //曲线
+        series: [
+          {
+            type: 'line', 
+            smooth: true, 
+            lineStyle: { width: 2 },
+            symbolSize: 0,
+            animation: false // 关闭动画
+          }
+        ]
+      };
+
+      chartHeart.setOption({...baseOption, title:{text:'心音原始数据实时波形'}, series:[{...baseOption.series[0], data:heartDataCache, lineStyle:{color:'#0066cc',width:2}}]});
+      chartTemp.setOption({...baseOption, title:{text:'温度原始数据实时波形'}, series:[{...baseOption.series[0], data:tempDataCache, lineStyle:{color:'#e63946',width:2}}]});
+      chartLight.setOption({...baseOption, title:{text:'光强原始数据实时波形'}, series:[{...baseOption.series[0], data:lightDataCache, lineStyle:{color:'#faa31b',width:2}}]});
+      chartVolt.setOption({...baseOption, title:{text:'电压原始数据实时波形'}, yAxis:{...baseOption.yAxis, name:'电压 (V)'}, series:[{...baseOption.series[0], data:voltDataCache, lineStyle:{color:'#27ae60',width:2}}]});
+    });
+
+    // 更新单条波形数据 - 头部插入新值，左进右出
+    function updateSingleChartData(chart, cache, val, min, max) {
+      val = Math.max(min, Math.min(max, val)); // 数值边界安全限制
+      cache.pop();  // 删除最后一位旧数据
+      cache.unshift(val); // 头部插入新数据
+      chart.setOption({ series: [{ data: cache }] }); // 刷新
+    }
+
+    // 更新顶部原始数据面板数值
+    function updateDataPanel(h, t, l, v) {
+      document.getElementById('showHeart').innerText = h;
+      document.getElementById('showTemp').innerText = t;
+      document.getElementById('showLight').innerText = l;
+      document.getElementById('showVolt').innerText = v;
+    }
+
+    // 同步更新4条独立波形
+    function updateChart(h, t, l, v) {
+      updateSingleChartData(chartHeart, heartDataCache, h, 0, 1100);
+      updateSingleChartData(chartTemp, tempDataCache, t, 0, 1100);
+      updateSingleChartData(chartLight, lightDataCache, l, 0, 1100);
+      updateSingleChartData(chartVolt, voltDataCache, v, 0, 1100);
+      updateDataPanel(h, t, l, v);
+    }
+
+    // 手动发送测试数据的同步
+    function sendManualData() {
+      const inputVal = parseFloat(document.getElementById('dataInput').value) || 0;
+      updateChart(inputVal, inputVal, inputVal, inputVal);
+      console.log('手动发送原始测试数据：', {心音:inputVal, 温度:inputVal, 光强:inputVal, 电压:inputVal});
+    }
+
+    // 自动模拟
+    function startAutoTest() {
+      if (autoTestTimer) return;
+      autoTestTimer = setInterval(() => {
+        const heartVal = Math.floor(Math.random() * 1000);
+        const tempVal = Math.floor(Math.random() * 1000);
+        const lightVal = Math.floor(Math.random() * 1000);
+        const voltVal = Math.floor(Math.random() * 1000);
+        updateChart(heartVal, tempVal, lightVal, voltVal);
+      }, 80);
+      console.log('✅ 已启动 原始数据自动模拟测试');
+    }
+
+    // 停止自动模拟
+    function stopAutoTest() {
+      if (autoTestTimer) {
+        clearInterval(autoTestTimer);
+        autoTestTimer = null;
+      }
+      console.log('✅ 已停止自动模拟');
+    }
+
+    // 重置所有图表数据为初始值0
+    function resetChartData() {
+      stopAutoTest();
+      heartDataCache = new Array(dataLen).fill(0);
+      tempDataCache = new Array(dataLen).fill(0);
+      lightDataCache = new Array(dataLen).fill(0);
+      voltDataCache = new Array(dataLen).fill(0);
+      chartHeart.setOption({ series: [{ data: heartDataCache }] });
+      chartTemp.setOption({ series: [{ data: tempDataCache }] });
+      chartLight.setOption({ series: [{ data: lightDataCache }] });
+      chartVolt.setOption({ series: [{ data: voltDataCache }] });
+      updateDataPanel(0, 0, 0, 0);
+      document.getElementById('dataInput').value = '';
+      console.log('✅ 图表数据已重置为原始初始值【0】');
+    }
+
+    // WebSocket 数据透传
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${wsProtocol}//${window.location.host}`);
+    
+    ws.onopen = () => {
+      console.log('✅ WebSocket连接成功，原始数据透传模式');
+      setInterval(() => ws.readyState === WebSocket.OPEN && ws.send('ping'), 30000);
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const allData = JSON.parse(event.data);
+        // 数据与波形的映射
+        const heartVal = typeof allData.heartSound1 === 'number' ? allData.heartSound1 : 0;
+        const tempVal = typeof allData.heartSound2 === 'number' ? allData.heartSound2 : 0;
+        const lightVal = typeof allData.heartSound3 === 'number' ? allData.heartSound3 : 0;
+        const voltVal = typeof allData.heartSound4 === 'number' ? allData.heartSound4 : 0;
+        
+        updateChart(heartVal, tempVal, lightVal, voltVal); 
+        console.log('✅ 接收后端原始数据：', {心音: heartVal,温度: tempVal,光强: lightVal,电压: voltVal});
+      } catch (err) {
+        console.error('解析数据失败：', err);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket连接关闭，3秒后重连...');
+      stopAutoTest();
+      setTimeout(() => window.location.reload(), 3000);
+    };
+
+    ws.onerror = (err) => console.error('WebSocket错误：', err);
+    window.onbeforeunload = () => { stopAutoTest(); ws.close(); };
+    window.onresize = () => { 
+      chartHeart.resize();chartTemp.resize();chartLight.resize();chartVolt.resize();
+    };
+  </script>
+</body>
+</html>
